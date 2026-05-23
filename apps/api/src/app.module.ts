@@ -6,6 +6,7 @@ import { BullMQAdapter } from "@bull-board/api/bullMQAdapter";
 import { FastifyAdapter as BullBoardFastifyAdapter } from "@bull-board/fastify";
 import { PrismaModule } from "@llm-observe/db";
 import { AnalyticsModule } from "./analytics/analytics.module";
+import { AdminModule } from "./admin/admin.module";
 import { ChatModule } from "./chat/chat.module";
 import { ConversationsModule } from "./conversations/conversations.module";
 import { EventsModule } from "./events/events.module";
@@ -51,6 +52,7 @@ function parseRedisUrl(url: string) {
     ConversationsModule,
     ChatModule,
     AnalyticsModule,
+    AdminModule,
   ],
   controllers: [HealthController],
   providers: [HealthService, ChatThrottlerGuard, IngestThrottlerGuard],
