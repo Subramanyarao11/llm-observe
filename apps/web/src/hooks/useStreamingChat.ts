@@ -1,6 +1,7 @@
 import { useCallback } from "react";
 import { useQueryClient } from "@tanstack/react-query";
-import { Provider } from "../lib/api";
+import { toast } from "sonner";
+import { Conversation, Provider } from "../lib/api";
 import { useChatStore } from "../store/chatStore";
 
 export function useStreamingChat() {
@@ -20,6 +21,23 @@ export function useStreamingChat() {
       model: string,
     ) => {
       resetStreaming();
+
+      qc.setQueryData<Conversation>(["conversations", conversationId], (old) => {
+        if (!old) return old;
+        return {
+          ...old,
+          messages: [
+            ...(old.messages ?? []),
+            {
+              id: `pending-user-${Date.now()}`,
+              role: "user",
+              content,
+              createdAt: new Date().toISOString(),
+            },
+          ],
+        };
+      });
+
       const params = new URLSearchParams({
         conversationId,
         sessionId,
@@ -41,13 +59,24 @@ export function useStreamingChat() {
         if (data.done || data.error) {
           es.close();
           resetStreaming();
-          qc.invalidateQueries({ queryKey: ["conversations", conversationId] });
+          if (data.error) toast.error(data.message ?? "Streaming failed");
+          void qc.invalidateQueries({
+            queryKey: ["conversations", conversationId],
+          });
+          void qc.invalidateQueries({
+            queryKey: ["conversations", conversationId, "inference-logs"],
+          });
+          void qc.invalidateQueries({ queryKey: ["conversations", "list"] });
         }
       };
 
       es.onerror = () => {
         es.close();
         resetStreaming();
+        toast.error("Connection lost while streaming");
+        void qc.invalidateQueries({
+          queryKey: ["conversations", conversationId],
+        });
       };
     },
     [

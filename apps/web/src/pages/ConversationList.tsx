@@ -1,122 +1,207 @@
-import { useState } from "react";
+import { useMemo, useState } from "react";
 import { Link } from "react-router-dom";
+import { motion } from "framer-motion";
+import { RefreshCw } from "lucide-react";
+import { PageTransition } from "../components/PageTransition";
+import { Badge } from "../components/ui/badge";
+import { Button } from "../components/ui/button";
+import { Card, CardContent } from "../components/ui/card";
+import { Dialog } from "../components/ui/dialog";
+import { Select } from "../components/ui/select";
+import { Spinner } from "../components/ui/spinner";
 import {
   useCancelConversation,
   useConversations,
   useResumeConversation,
 } from "../hooks/queries";
+import { formatRelativeTime, truncate } from "../lib/format";
 import { Provider } from "../lib/api";
-
-const statusColors: Record<string, string> = {
-  active: "bg-emerald-500/20 text-emerald-300",
-  cancelled: "bg-red-500/20 text-red-300",
-  completed: "bg-slate-500/20 text-slate-300",
-};
+import { cn } from "../lib/utils";
 
 export function ConversationList() {
   const [status, setStatus] = useState<string>("");
   const [provider, setProvider] = useState<Provider | "">("");
-  const { data, isLoading } = useConversations({
-    status: status || undefined,
-    provider: provider || undefined,
-  });
+  const [cancelId, setCancelId] = useState<string | null>(null);
+  const filters = useMemo(
+    () => ({
+      status: status || undefined,
+      provider: provider || undefined,
+    }),
+    [status, provider],
+  );
+  const { data, isLoading, isError, error, refetch, isFetching } =
+    useConversations(filters);
   const cancel = useCancelConversation();
   const resume = useResumeConversation();
 
   return (
-    <div>
+    <PageTransition>
       <div className="mb-6 flex items-center justify-between">
-        <h1 className="text-2xl font-bold">Conversations</h1>
-        <Link
-          to="/conversations/new"
-          className="rounded-lg bg-emerald-600 px-4 py-2 text-sm font-medium hover:bg-emerald-500"
-        >
-          New Conversation
+        <div>
+          <h1 className="text-2xl font-semibold tracking-tight">Conversations</h1>
+          <p className="mt-1 text-sm text-neutral-500 dark:text-neutral-400">
+            Browse and manage your LLM sessions
+          </p>
+        </div>
+        <Link to="/conversations/new">
+          <Button>New Conversation</Button>
         </Link>
       </div>
 
-      <div className="mb-4 flex gap-3">
-        <select
+      <div className="mb-4 flex flex-wrap gap-3">
+        <Select
           value={status}
           onChange={(e) => setStatus(e.target.value)}
-          className="rounded-lg border border-slate-700 bg-slate-900 px-3 py-2 text-sm"
+          className="min-w-[160px]"
         >
           <option value="">All statuses</option>
           <option value="active">Active</option>
           <option value="cancelled">Cancelled</option>
           <option value="completed">Completed</option>
-        </select>
-        <select
+        </Select>
+        <Select
           value={provider}
           onChange={(e) => setProvider(e.target.value as Provider | "")}
-          className="rounded-lg border border-slate-700 bg-slate-900 px-3 py-2 text-sm"
+          className="min-w-[160px]"
         >
           <option value="">All providers</option>
           <option value="openai">OpenAI</option>
           <option value="anthropic">Anthropic</option>
           <option value="gemini">Gemini</option>
-        </select>
+        </Select>
+        <Button variant="outline" size="sm" onClick={() => refetch()}>
+          <RefreshCw className={cn("h-4 w-4", isFetching && "animate-spin")} />
+          Refresh
+        </Button>
       </div>
 
       {isLoading ? (
-        <p className="text-slate-400">Loading...</p>
-      ) : (
-        <div className="space-y-3">
-          {data?.items.map((c) => (
-            <div
-              key={c.id}
-              className="flex items-center justify-between rounded-xl border border-slate-800 bg-slate-900/50 p-4"
-            >
-              <div>
-                <Link
-                  to={`/conversations/${c.id}`}
-                  className="font-medium hover:text-emerald-400"
-                >
-                  {c.title ?? "Untitled"}
-                </Link>
-                <div className="mt-1 flex gap-2 text-xs text-slate-400">
-                  <span className="rounded bg-slate-800 px-2 py-0.5">
-                    {c.provider}
-                  </span>
-                  <span>{c.model}</span>
-                  <span
-                    className={`rounded px-2 py-0.5 ${statusColors[c.status] ?? ""}`}
-                  >
-                    {c.status}
-                  </span>
-                </div>
-              </div>
-              <div className="flex gap-2">
-                {c.status === "cancelled" && (
-                  <button
-                    onClick={() => resume.mutate(c.id)}
-                    className="rounded-lg border border-slate-700 px-3 py-1 text-sm hover:bg-slate-800"
-                  >
-                    Resume
-                  </button>
-                )}
-                {c.status === "active" && (
-                  <button
-                    onClick={() => cancel.mutate(c.id)}
-                    className="rounded-lg border border-red-800 px-3 py-1 text-sm text-red-300 hover:bg-red-950"
-                  >
-                    Cancel
-                  </button>
-                )}
-                <Link
-                  to={`/conversations/${c.id}`}
-                  className="rounded-lg bg-slate-800 px-3 py-1 text-sm hover:bg-slate-700"
-                >
-                  Open
-                </Link>
-              </div>
-            </div>
-          ))}
-          {data?.items.length === 0 && (
-            <p className="text-slate-500">No conversations yet.</p>
-          )}
+        <div className="flex items-center gap-2 text-neutral-500">
+          <Spinner className="h-4 w-4" />
+          Loading conversations...
         </div>
+      ) : isError ? (
+        <Card>
+          <CardContent className="flex flex-col items-start gap-3 pt-6">
+            <p className="text-sm text-red-600 dark:text-red-400">
+              Failed to load conversations:{" "}
+              {error instanceof Error ? error.message : "Unknown error"}
+            </p>
+            <Button variant="outline" onClick={() => refetch()}>
+              Retry
+            </Button>
+          </CardContent>
+        </Card>
+      ) : data?.items.length === 0 ? (
+        <Card>
+          <CardContent className="py-10 text-center">
+            <p className="text-neutral-500">No conversations yet.</p>
+            <Link to="/conversations/new">
+              <Button className="mt-4">Start your first chat</Button>
+            </Link>
+          </CardContent>
+        </Card>
+      ) : (
+        <motion.div
+          className="space-y-3"
+          initial="hidden"
+          animate="visible"
+          variants={{
+            visible: { transition: { staggerChildren: 0.04 } },
+          }}
+        >
+          {data?.items.map((c) => {
+            const lastMessage = c.messages?.[0];
+            const preview = lastMessage
+              ? `${lastMessage.role === "user" ? "You" : "Assistant"}: ${truncate(lastMessage.content)}`
+              : "No messages yet";
+
+            return (
+              <motion.div
+                key={c.id}
+                variants={{
+                  hidden: { opacity: 0, y: 8 },
+                  visible: { opacity: 1, y: 0 },
+                }}
+              >
+                <Card
+                  className={cn(
+                    "transition-shadow hover:shadow-md",
+                    c.status === "active" &&
+                      "ring-1 ring-neutral-900/10 dark:ring-neutral-100/10",
+                  )}
+                >
+                  <CardContent className="flex flex-col gap-4 pt-5 sm:flex-row sm:items-center sm:justify-between">
+                    <div className="min-w-0 flex-1">
+                      <div className="flex flex-wrap items-center gap-2">
+                        <Link
+                          to={`/conversations/${c.id}`}
+                          className="font-medium hover:underline"
+                        >
+                          {c.title ?? "Untitled"}
+                        </Link>
+                        <Badge variant={c.status === "active" ? "active" : "outline"}>
+                          {c.status}
+                        </Badge>
+                      </div>
+                      <p className="mt-1 truncate text-sm text-neutral-500 dark:text-neutral-400">
+                        {preview}
+                      </p>
+                      <div className="mt-2 flex flex-wrap gap-2 text-xs text-neutral-500">
+                        <Badge variant="outline">{c.provider}</Badge>
+                        <span>{c.model}</span>
+                        <span>·</span>
+                        <span>{formatRelativeTime(c.updatedAt)}</span>
+                      </div>
+                    </div>
+                    <div className="flex gap-2">
+                      {c.status === "cancelled" ? (
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          loading={resume.isPending}
+                          onClick={() => resume.mutate(c.id)}
+                        >
+                          Resume
+                        </Button>
+                      ) : null}
+                      {c.status === "active" ? (
+                        <Button
+                          variant="destructive"
+                          size="sm"
+                          onClick={() => setCancelId(c.id)}
+                        >
+                          Cancel
+                        </Button>
+                      ) : null}
+                      <Link to={`/conversations/${c.id}`}>
+                        <Button variant="outline" size="sm">
+                          Open
+                        </Button>
+                      </Link>
+                    </div>
+                  </CardContent>
+                </Card>
+              </motion.div>
+            );
+          })}
+        </motion.div>
       )}
-    </div>
+
+      <Dialog
+        open={!!cancelId}
+        onOpenChange={(open) => !open && setCancelId(null)}
+        title="Cancel conversation?"
+        description="This will stop further messages in this conversation. You can resume it later."
+        confirmLabel="Cancel conversation"
+        onConfirm={() => {
+          if (!cancelId) return;
+          cancel.mutate(cancelId, {
+            onSettled: () => setCancelId(null),
+          });
+        }}
+        loading={cancel.isPending}
+      />
+    </PageTransition>
   );
 }

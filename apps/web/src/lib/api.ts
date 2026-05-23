@@ -3,9 +3,14 @@ const API_BASE = import.meta.env.VITE_API_URL
   : "/api";
 
 async function request<T>(path: string, init?: RequestInit): Promise<T> {
+  const headers = new Headers(init?.headers);
+  if (init?.body && !headers.has("Content-Type")) {
+    headers.set("Content-Type", "application/json");
+  }
+
   const res = await fetch(`${API_BASE}${path}`, {
-    headers: { "Content-Type": "application/json", ...init?.headers },
     ...init,
+    headers,
   });
   if (!res.ok) {
     const text = await res.text();
@@ -34,12 +39,52 @@ export interface Message {
   createdAt: string;
 }
 
+export interface InferenceLogSummary {
+  id: string;
+  latencyMs: number | null;
+  ttftMs: number | null;
+  totalTokens: number | null;
+  promptTokens: number | null;
+  completionTokens: number | null;
+  status: string;
+  requestStartedAt: string;
+}
+
+export interface RecentError {
+  id: string;
+  errorCode: string | null;
+  errorMessage: string | null;
+  conversationId: string | null;
+  provider: string;
+  model: string;
+  createdAt: string;
+}
+
+export interface AnalyticsLog {
+  id: string;
+  conversationId: string | null;
+  sessionId: string;
+  provider: string;
+  model: string;
+  status: string;
+  latencyMs: number | null;
+  ttftMs: number | null;
+  totalTokens: number | null;
+  promptTokens: number | null;
+  completionTokens: number | null;
+  errorCode: string | null;
+  createdAt: string;
+}
+
 export const api = {
   conversations: {
     list: (filters?: { status?: string; provider?: Provider }) => {
-      const params = new URLSearchParams(filters as Record<string, string>);
+      const params = new URLSearchParams();
+      if (filters?.status) params.set("status", filters.status);
+      if (filters?.provider) params.set("provider", filters.provider);
+      const query = params.toString();
       return request<{ items: Conversation[]; total: number }>(
-        `/conversations?${params}`,
+        `/conversations${query ? `?${query}` : ""}`,
       );
     },
     get: (id: string) => request<Conversation>(`/conversations/${id}`),
@@ -52,6 +97,8 @@ export const api = {
       request<Conversation>(`/conversations/${id}/cancel`, { method: "PATCH" }),
     resume: (id: string) =>
       request<Conversation>(`/conversations/${id}/resume`, { method: "POST" }),
+    inferenceLogs: (id: string) =>
+      request<InferenceLogSummary[]>(`/conversations/${id}/inference-logs`),
   },
   analytics: {
     summary: () =>
@@ -80,6 +127,14 @@ export const api = {
         byCode: { errorCode: string | null; _count: number }[];
         byProvider: { provider: string; _count: number }[];
       }>(`/analytics/errors?window=${window}`),
+    recentErrors: (window: string) =>
+      request<RecentError[]>(`/analytics/recent-errors?window=${window}`),
+    logs: (window: string, provider?: string, hour?: string) => {
+      const params = new URLSearchParams({ window });
+      if (provider) params.set("provider", provider);
+      if (hour) params.set("hour", hour);
+      return request<AnalyticsLog[]>(`/analytics/logs?${params}`);
+    },
   },
 };
 
