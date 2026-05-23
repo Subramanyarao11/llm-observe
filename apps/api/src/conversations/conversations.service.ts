@@ -91,11 +91,33 @@ export class ConversationsService {
 
   async addMessage(conversationId: string, role: string, content: string) {
     const { redacted } = redactPII(content);
-    return this.prisma.message.create({
+    const message = await this.prisma.message.create({
       data: {
         conversationId,
         role,
         content: redacted,
+      },
+    });
+    await this.prisma.conversation.update({
+      where: { id: conversationId },
+      data: { updatedAt: new Date() },
+    });
+    return message;
+  }
+
+  async getInferenceLogs(conversationId: string) {
+    return this.prisma.inferenceLog.findMany({
+      where: { conversationId },
+      orderBy: { requestStartedAt: "asc" },
+      select: {
+        id: true,
+        latencyMs: true,
+        ttftMs: true,
+        totalTokens: true,
+        promptTokens: true,
+        completionTokens: true,
+        status: true,
+        requestStartedAt: true,
       },
     });
   }

@@ -24,4 +24,18 @@ export class AnalyticsController {
   summary() {
     return this.analyticsService.summary();
   }
+
+  @Get("recent-errors")
+  recentErrors(@Query("window") window: "1h" | "24h" | "7d" = "24h") {
+    return this.analyticsService.recentErrors(window);
+  }
+
+  @Get("logs")
+  logs(
+    @Query("window") window: "1h" | "24h" | "7d" = "24h",
+    @Query("provider") provider?: string,
+    @Query("hour") hour?: string,
+  ) {
+    return this.analyticsService.logs(window, provider, hour);
+  }
 }

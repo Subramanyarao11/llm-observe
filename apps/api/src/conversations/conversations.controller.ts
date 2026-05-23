@@ -19,6 +19,11 @@ export class ConversationsController {
     return this.conversationsService.list(query);
   }
 
+  @Get(":id/inference-logs")
+  getInferenceLogs(@Param("id") id: string) {
+    return this.conversationsService.getInferenceLogs(id);
+  }
+
   @Get(":id")
   get(@Param("id") id: string) {
     return this.conversationsService.getWithMessages(id);
