@@ -9,9 +9,9 @@
     "start:prod": "node dist/main.js"
   },
   "dependencies": {
-    "@bull-board/api": "^6.3.4",
-    "@bull-board/fastify": "^6.3.4",
-    "@bull-board/nestjs": "^6.3.4",
+    "@bull-board/api": "^5.23.0",
+    "@bull-board/fastify": "^5.23.0",
+    "@bull-board/nestjs": "^5.23.0",
     "@llm-observe/db": "workspace:*",
     "@llm-observe/pii": "workspace:*",
     "@llm-observe/sdk": "workspace:*",

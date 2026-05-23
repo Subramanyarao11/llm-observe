@@ -5,8 +5,6 @@ COPY package.json pnpm-lock.yaml pnpm-workspace.yaml turbo.json tsconfig.base.js
 COPY packages/types ./packages/types
 COPY apps/web ./apps/web
 RUN pnpm install --frozen-lockfile
-ARG VITE_API_URL=http://localhost:3001
-ENV VITE_API_URL=$VITE_API_URL
 RUN pnpm --filter @llm-observe/web build
 
 FROM nginx:alpine

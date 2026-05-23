@@ -20,20 +20,16 @@ RUN pnpm --filter @llm-observe/pii build
 RUN pnpm --filter @llm-observe/sdk build
 RUN pnpm --filter @llm-observe/api build
 RUN pnpm --filter @llm-observe/worker build
+RUN pnpm --filter @llm-observe/api deploy --prod --ignore-scripts /prod/api
+RUN pnpm --filter @llm-observe/worker deploy --prod --ignore-scripts /prod/worker
 
-FROM base AS api
-COPY --from=builder /app/node_modules ./node_modules
-COPY --from=builder /app/packages ./packages
-COPY --from=builder /app/apps/api/dist ./apps/api/dist
-COPY --from=builder /app/apps/api/package.json ./apps/api/
-WORKDIR /app/apps/api
+FROM node:20-alpine AS api
+WORKDIR /app
+COPY --from=builder /prod/api .
 EXPOSE 3001
 CMD ["node", "dist/main.js"]
 
-FROM base AS worker
-COPY --from=builder /app/node_modules ./node_modules
-COPY --from=builder /app/packages ./packages
-COPY --from=builder /app/apps/worker/dist ./apps/worker/dist
-COPY --from=builder /app/apps/worker/package.json ./apps/worker/
-WORKDIR /app/apps/worker
+FROM node:20-alpine AS worker
+WORKDIR /app
+COPY --from=builder /prod/worker .
 CMD ["node", "dist/main.js"]

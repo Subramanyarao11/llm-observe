@@ -1,0 +1,11 @@
+node_modules
+.pnpm-store
+dist
+.turbo
+.git
+*.log
+.env
+.env.*
+apps/web/dist
+packages/db/src/generated
+packages/db/dist

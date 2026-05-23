@@ -36,7 +36,7 @@ function parseRedisUrl(url: string) {
     }),
     BullBoardModule.forFeature({
       name: "inference-logs",
-      adapter: BullMQAdapter,
+      adapter: BullMQAdapter as never,
     }),
     IngestModule,
     ConversationsModule,
