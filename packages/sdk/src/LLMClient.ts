@@ -1,4 +1,5 @@
 import { v4 as uuid } from "uuid";
+import { sanitizePreview } from "@llm-observe/pii";
 import type {
   InferenceMetadata,
   LLMRequestOptions,
@@ -36,13 +37,13 @@ export class LLMClient {
       status = "error";
       const e = err as { code?: string; message?: string };
       errorCode = e.code ?? "UNKNOWN";
-      errorMessage = e.message?.slice(0, 500);
+      errorMessage = sanitizePreview(e.message);
       throw err;
     } finally {
       const requestEndedAt = new Date().toISOString();
       const latencyMs = Date.now() - new Date(requestStartedAt).getTime();
-      const inputPreview = options.messages.at(-1)?.content.slice(0, 500);
-      const outputPreview = result.content.slice(0, 500);
+      const inputPreview = sanitizePreview(options.messages.at(-1)?.content);
+      const outputPreview = sanitizePreview(result.content);
 
       this.emitLog({
         logId,
@@ -93,7 +94,7 @@ export class LLMClient {
       status = "error";
       const e = err as { code?: string; message?: string };
       errorCode = e.code ?? "UNKNOWN";
-      errorMessage = e.message?.slice(0, 500);
+      errorMessage = sanitizePreview(e.message);
       throw err;
     } finally {
       const requestEndedAt = new Date().toISOString();
@@ -114,8 +115,8 @@ export class LLMClient {
         latencyMs,
         ttftMs,
         status,
-        inputPreview: options.messages.at(-1)?.content.slice(0, 500),
-        outputPreview: fullOutput.slice(0, 500),
+        inputPreview: sanitizePreview(options.messages.at(-1)?.content),
+        outputPreview: sanitizePreview(fullOutput),
         errorCode,
         errorMessage,
         promptTokens: usage?.promptTokens,

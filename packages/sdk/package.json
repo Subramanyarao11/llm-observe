@@ -17,6 +17,7 @@
   "dependencies": {
     "@anthropic-ai/sdk": "^0.39.0",
     "@google/generative-ai": "^0.21.0",
+    "@llm-observe/pii": "workspace:^",
     "@llm-observe/types": "workspace:*",
     "openai": "^4.77.0",
     "uuid": "^11.0.3"

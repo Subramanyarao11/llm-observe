@@ -237,6 +237,9 @@ importers:
       '@google/generative-ai':
         specifier: ^0.21.0
         version: 0.21.0
+      '@llm-observe/pii':
+        specifier: workspace:^
+        version: link:../pii
       '@llm-observe/types':
         specifier: workspace:*
         version: link:../types

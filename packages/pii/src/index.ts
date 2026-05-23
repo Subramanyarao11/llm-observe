@@ -25,8 +25,28 @@ const PII_PATTERNS: { name: string; pattern: RegExp; replacement: string }[] = [
     replacement: "[IP]",
   },
   {
-    name: "api_key",
-    pattern: /\b(sk-|pk-|ak-)[a-zA-Z0-9]{20,}\b/g,
+    name: "api_key_openai",
+    pattern: /\bsk-(?:proj-)?[A-Za-z0-9_-]{10,}\b/g,
+    replacement: "[APIKEY]",
+  },
+  {
+    name: "api_key_anthropic",
+    pattern: /\bsk-ant-[A-Za-z0-9_-]{10,}\b/g,
+    replacement: "[APIKEY]",
+  },
+  {
+    name: "api_key_google",
+    pattern: /\bAIza[0-9A-Za-z_-]{30,}\b/g,
+    replacement: "[APIKEY]",
+  },
+  {
+    name: "bearer_token",
+    pattern: /\bBearer\s+[A-Za-z0-9._-]+\b/gi,
+    replacement: "Bearer [APIKEY]",
+  },
+  {
+    name: "generic_secret",
+    pattern: /\b(?:sk-|pk-|ak-|xox[baprs]-)[a-zA-Z0-9_-]{10,}\b/g,
     replacement: "[APIKEY]",
   },
 ];
@@ -42,4 +62,9 @@ export function redactPII(text: string): { redacted: string; didRedact: boolean 
   }
 
   return { redacted, didRedact };
+}
+
+export function sanitizePreview(text: string | undefined): string | undefined {
+  if (!text) return undefined;
+  return redactPII(text.slice(0, 500)).redacted;
 }

@@ -44,6 +44,13 @@ export class LogProcessor extends WorkerHost {
       piiRedacted = piiRedacted || r.didRedact;
     }
 
+    let errorMessage = payload.errorMessage;
+    if (errorMessage) {
+      const r = redactPII(errorMessage);
+      errorMessage = r.redacted;
+      piiRedacted = piiRedacted || r.didRedact;
+    }
+
     await this.prisma.inferenceLog.upsert({
       where: { id: payload.logId },
       create: {
@@ -68,7 +75,7 @@ export class LogProcessor extends WorkerHost {
         inputPreview,
         outputPreview,
         errorCode: payload.errorCode,
-        errorMessage: payload.errorMessage,
+        errorMessage,
         metadata: payload.metadata as Prisma.InputJsonValue | undefined,
         piiRedacted,
       },
@@ -93,7 +100,7 @@ export class LogProcessor extends WorkerHost {
         inputPreview,
         outputPreview,
         errorCode: payload.errorCode,
-        errorMessage: payload.errorMessage,
+        errorMessage,
         metadata: payload.metadata as Prisma.InputJsonValue | undefined,
         piiRedacted,
       },
