@@ -9,6 +9,7 @@ import { ChatModule } from "./chat/chat.module";
 import { ConversationsModule } from "./conversations/conversations.module";
 import { EventsModule } from "./events/events.module";
 import { HealthController } from "./health.controller";
+import { HealthService } from "./health.service";
 import { IngestModule } from "./ingest/ingest.module";
 
 function parseRedisUrl(url: string) {
@@ -44,5 +45,6 @@ function parseRedisUrl(url: string) {
     AnalyticsModule,
   ],
   controllers: [HealthController],
+  providers: [HealthService],
 })
 export class AppModule {}
