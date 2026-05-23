@@ -52,7 +52,17 @@ export class ConversationsService {
       this.prisma.conversation.count({ where }),
     ]);
 
-    return { items, total, page, limit };
+    const totalPages = total === 0 ? 0 : Math.ceil(total / limit);
+
+    return {
+      items,
+      total,
+      page,
+      limit,
+      totalPages,
+      hasNext: page < totalPages,
+      hasPrevious: page > 1,
+    };
   }
 
   async getWithMessages(id: string) {
