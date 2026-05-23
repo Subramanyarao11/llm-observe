@@ -72,10 +72,16 @@ kubectl apply -f k8s/hpa/
 
 ## Access the App
 
-Add minikube's IP to `/etc/hosts`:
+On the Docker driver, start the ingress tunnel in a **separate terminal** and leave it running:
 
 ```bash
-echo "$(minikube ip) llm-observe.local" | sudo tee -a /etc/hosts
+minikube tunnel
+```
+
+Add localhost to `/etc/hosts`:
+
+```bash
+echo "127.0.0.1 llm-observe.local" | sudo tee -a /etc/hosts
 ```
 
 Open:

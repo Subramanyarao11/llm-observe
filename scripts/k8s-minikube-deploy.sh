@@ -19,7 +19,7 @@ require_command docker
 
 if ! minikube status >/dev/null 2>&1; then
   echo "==> Starting minikube"
-  minikube start --cpus=4 --memory=8192
+  minikube start --cpus=4 --memory=6144 --driver=docker
 fi
 
 echo "==> Enabling ingress and metrics-server addons"
@@ -84,17 +84,20 @@ cat <<EOF
 
 Deployment complete.
 
-1. Add this line to /etc/hosts if it is not there already:
-   ${MINIKUBE_IP} ${HOST}
+1. Start the ingress tunnel in a separate terminal (required on Docker driver):
+   minikube tunnel
 
-2. Edit k8s/secret.yaml with your LLM API keys, then re-apply:
+2. Add this line to /etc/hosts if it is not there already:
+   127.0.0.1 ${HOST}
+
+3. Edit k8s/secret.yaml with your LLM API keys, then re-apply:
    kubectl apply -f k8s/secret.yaml
    kubectl rollout restart deployment/api -n ${NAMESPACE}
 
-3. Open the app:
+4. Open the app:
    http://${HOST}/
 
-4. Useful checks:
+5. Useful checks:
    kubectl get pods -n ${NAMESPACE}
    curl -s http://${HOST}/api/health | jq
    open http://${HOST}/
