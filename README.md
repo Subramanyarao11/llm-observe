@@ -97,15 +97,27 @@ flowchart LR
 
 ## Kubernetes
 
-Apply manifests:
+Self-hosted deployment manifests live in `k8s/`. For a full minikube walkthrough, see **[k8s/README.md](./k8s/README.md)**.
+
+Quick start:
+
+```bash
+vim k8s/secret.yaml   # add LLM API keys
+./scripts/k8s-minikube-deploy.sh
+echo "$(minikube ip) llm-observe.local" | sudo tee -a /etc/hosts
+open http://llm-observe.local/
+```
+
+Manual apply order:
 
 ```bash
 kubectl apply -f k8s/namespace.yaml
 kubectl apply -f k8s/configmap.yaml
 kubectl apply -f k8s/secret.yaml
-kubectl apply -f k8s/statefulsets/
-kubectl apply -f k8s/deployments/
 kubectl apply -f k8s/services/
+kubectl apply -f k8s/statefulsets/
+kubectl apply -f k8s/jobs/migrate.yaml
+kubectl apply -f k8s/deployments/
 kubectl apply -f k8s/ingress.yaml
 kubectl apply -f k8s/hpa/
 ```
@@ -124,5 +136,7 @@ llm-observe/
 │   ├── pii/       # PII redaction
 │   └── types/     # Shared types & Zod schemas
 ├── k8s/           # Kubernetes manifests
+│   └── README.md  # minikube / self-hosted deploy guide
+├── scripts/       # deploy helpers
 └── docker-compose.yml
 ```
