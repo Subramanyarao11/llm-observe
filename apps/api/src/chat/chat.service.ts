@@ -32,7 +32,7 @@ export class ChatService {
     });
 
     const messages = [
-      ...conversation.messages.map((m) => ({
+      ...conversation.messages.map((m: { role: string; content: string }) => ({
         role: m.role as "user" | "assistant" | "system",
         content: m.content,
       })),
@@ -76,7 +76,7 @@ export class ChatService {
     });
 
     const messages = [
-      ...conversation.messages.map((m) => ({
+      ...conversation.messages.map((m: { role: string; content: string }) => ({
         role: m.role as "user" | "assistant" | "system",
         content: m.content,
       })),
