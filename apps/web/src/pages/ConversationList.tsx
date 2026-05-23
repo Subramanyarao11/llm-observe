@@ -1,7 +1,7 @@
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { Link } from "react-router-dom";
 import { motion } from "framer-motion";
-import { RefreshCw } from "lucide-react";
+import { ChevronLeft, ChevronRight, RefreshCw } from "lucide-react";
 import { PageTransition } from "../components/PageTransition";
 import { Badge } from "../components/ui/badge";
 import { Button } from "../components/ui/button";
@@ -15,19 +15,29 @@ import {
   useResumeConversation,
 } from "../hooks/queries";
 import { formatRelativeTime, truncate } from "../lib/format";
+import { formatApiError } from "../lib/errors";
 import { Provider } from "../lib/api";
 import { cn } from "../lib/utils";
 
 export function ConversationList() {
   const [status, setStatus] = useState<string>("");
   const [provider, setProvider] = useState<Provider | "">("");
+  const [page, setPage] = useState(1);
   const [cancelId, setCancelId] = useState<string | null>(null);
+  const limit = 10;
+
+  useEffect(() => {
+    setPage(1);
+  }, [status, provider]);
+
   const filters = useMemo(
     () => ({
       status: status || undefined,
       provider: provider || undefined,
+      page,
+      limit,
     }),
-    [status, provider],
+    [status, provider, page, limit],
   );
   const { data, isLoading, isError, error, refetch, isFetching } =
     useConversations(filters);
@@ -84,8 +94,7 @@ export function ConversationList() {
         <Card>
           <CardContent className="flex flex-col items-start gap-3 pt-6">
             <p className="text-sm text-red-600 dark:text-red-400">
-              Failed to load conversations:{" "}
-              {error instanceof Error ? error.message : "Unknown error"}
+              Failed to load conversations: {formatApiError(error)}
             </p>
             <Button variant="outline" onClick={() => refetch()}>
               Retry
@@ -187,6 +196,38 @@ export function ConversationList() {
           })}
         </motion.div>
       )}
+
+      {data && data.total > 0 ? (
+        <div className="mt-6 flex flex-col gap-3 border-t border-neutral-200 pt-4 dark:border-neutral-800 sm:flex-row sm:items-center sm:justify-between">
+          <p className="text-sm text-neutral-500 dark:text-neutral-400">
+            {data.totalPages > 1
+              ? `Page ${data.page} of ${data.totalPages} · ${data.total} conversations`
+              : `${data.total} conversation${data.total === 1 ? "" : "s"}`}
+          </p>
+          {data.totalPages > 1 ? (
+            <div className="flex gap-2">
+              <Button
+                variant="outline"
+                size="sm"
+                disabled={!data.hasPrevious || isFetching}
+                onClick={() => setPage((current) => Math.max(1, current - 1))}
+              >
+                <ChevronLeft className="h-4 w-4" />
+                Previous
+              </Button>
+              <Button
+                variant="outline"
+                size="sm"
+                disabled={!data.hasNext || isFetching}
+                onClick={() => setPage((current) => current + 1)}
+              >
+                Next
+                <ChevronRight className="h-4 w-4" />
+              </Button>
+            </div>
+          ) : null}
+        </div>
+      ) : null}
 
       <Dialog
         open={!!cancelId}
