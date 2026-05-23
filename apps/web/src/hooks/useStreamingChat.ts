@@ -67,6 +67,7 @@ export function useStreamingChat() {
             queryKey: ["conversations", conversationId, "inference-logs"],
           });
           void qc.invalidateQueries({ queryKey: ["conversations", "list"] });
+          void qc.invalidateQueries({ queryKey: ["analytics"] });
         }
       };
 
