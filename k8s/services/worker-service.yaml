@@ -1,0 +1,12 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: worker-service
+  namespace: llm-observe
+spec:
+  selector:
+    app: worker
+  ports:
+    - port: 3000
+      targetPort: 3000
+  clusterIP: None

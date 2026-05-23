@@ -1,0 +1,31 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: api
+  namespace: llm-observe
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: api
+  template:
+    metadata:
+      labels:
+        app: api
+    spec:
+      containers:
+        - name: api
+          image: llm-observe-api:latest
+          ports:
+            - containerPort: 3001
+          envFrom:
+            - configMapRef:
+                name: llm-observe-config
+            - secretRef:
+                name: llm-observe-secrets
+          readinessProbe:
+            httpGet:
+              path: /api/health
+              port: 3001
+            initialDelaySeconds: 10
+            periodSeconds: 5
