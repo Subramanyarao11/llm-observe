@@ -76,3 +76,17 @@ model InferenceLog {
   @@index([sessionId, createdAt])
   @@map("inference_logs")
 }
+
+model AnalyticsHourlyRollup {
+  hour         DateTime
+  provider     String
+  requestCount Int @default(0)
+  successCount Int @default(0)
+  errorCount   Int @default(0)
+  totalTokens  Int @default(0)
+  latencySumMs Int @default(0)
+
+  @@id([hour, provider])
+  @@index([hour])
+  @@map("analytics_hourly_rollups")
+}

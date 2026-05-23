@@ -99,6 +99,42 @@ export class LogProcessor extends WorkerHost {
       },
     });
 
+    await this.updateHourlyRollup(payload);
+
     this.events.emit("inference.log_processed", { logId: payload.logId });
+  }
+
+  private async updateHourlyRollup(payload: InferenceLogPayload) {
+    const hour = new Date(payload.requestStartedAt);
+    hour.setUTCMinutes(0, 0, 0);
+
+    const tokens =
+      payload.totalTokens ??
+      (payload.promptTokens ?? 0) + (payload.completionTokens ?? 0);
+
+    await this.prisma.analyticsHourlyRollup.upsert({
+      where: {
+        hour_provider: {
+          hour,
+          provider: payload.provider,
+        },
+      },
+      create: {
+        hour,
+        provider: payload.provider,
+        requestCount: 1,
+        successCount: payload.status === "success" ? 1 : 0,
+        errorCount: payload.status === "error" ? 1 : 0,
+        totalTokens: tokens,
+        latencySumMs: payload.latencyMs ?? 0,
+      },
+      update: {
+        requestCount: { increment: 1 },
+        successCount: { increment: payload.status === "success" ? 1 : 0 },
+        errorCount: { increment: payload.status === "error" ? 1 : 0 },
+        totalTokens: { increment: tokens },
+        latencySumMs: { increment: payload.latencyMs ?? 0 },
+      },
+    });
   }
 }
