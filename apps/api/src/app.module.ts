@@ -1,5 +1,6 @@
 import { Module } from "@nestjs/common";
 import { BullModule } from "@nestjs/bullmq";
+import { ThrottlerModule } from "@nestjs/throttler";
 import { BullBoardModule } from "@bull-board/nestjs";
 import { BullMQAdapter } from "@bull-board/api/bullMQAdapter";
 import { FastifyAdapter as BullBoardFastifyAdapter } from "@bull-board/fastify";
@@ -10,6 +11,7 @@ import { ConversationsModule } from "./conversations/conversations.module";
 import { EventsModule } from "./events/events.module";
 import { HealthController } from "./health.controller";
 import { HealthService } from "./health.service";
+import { ChatThrottlerGuard, IngestThrottlerGuard } from "./common/throttler.guards";
 import { IngestModule } from "./ingest/ingest.module";
 
 function parseRedisUrl(url: string) {
@@ -30,6 +32,12 @@ function parseRedisUrl(url: string) {
         process.env.REDIS_URL ?? "redis://localhost:6379",
       ),
     }),
+    ThrottlerModule.forRoot({
+      throttlers: [
+        { name: "chat", ttl: 60_000, limit: 30 },
+        { name: "ingest", ttl: 60_000, limit: 120 },
+      ],
+    }),
     BullModule.registerQueue({ name: "inference-logs" }),
     BullBoardModule.forRoot({
       route: "/admin/queues",
@@ -45,6 +53,6 @@ function parseRedisUrl(url: string) {
     AnalyticsModule,
   ],
   controllers: [HealthController],
-  providers: [HealthService],
+  providers: [HealthService, ChatThrottlerGuard, IngestThrottlerGuard],
 })
 export class AppModule {}

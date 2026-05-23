@@ -1,9 +1,13 @@
-import { Body, Controller, MessageEvent, Post, Query, Sse } from "@nestjs/common";
+import { Body, Controller, MessageEvent, Post, Query, Sse, UseGuards } from "@nestjs/common";
+import { Throttle } from "@nestjs/throttler";
 import { Observable, Subject } from "rxjs";
+import { ChatThrottlerGuard } from "../common/throttler.guards";
 import { ChatService } from "./chat.service";
 import { ChatDto, StreamQueryDto } from "../dto";
 
 @Controller("chat")
+@UseGuards(ChatThrottlerGuard)
+@Throttle({ chat: { limit: 30, ttl: 60_000 } })
 export class ChatController {
   constructor(private readonly chatService: ChatService) {}
 
