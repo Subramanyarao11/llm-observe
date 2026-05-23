@@ -11,9 +11,10 @@
     }
   },
   "scripts": {
-    "build": "tsc",
+    "build": "prisma generate && tsc && cp -r src/generated dist/generated",
     "dev": "tsc --watch",
     "generate": "prisma generate",
+    "postinstall": "prisma generate",
     "migrate": "prisma migrate dev",
     "push": "prisma db push"
   },

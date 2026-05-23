@@ -7,7 +7,8 @@
     "lint": "turbo run lint",
     "db:generate": "pnpm --filter @llm-observe/db generate",
     "db:migrate": "pnpm --filter @llm-observe/db migrate",
-    "db:push": "pnpm --filter @llm-observe/db push"
+    "db:push": "pnpm --filter @llm-observe/db push",
+    "prepare": "pnpm db:generate"
   },
   "devDependencies": {
     "turbo": "^2.3.3",

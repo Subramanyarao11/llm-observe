@@ -1,7 +1,7 @@
 import { Processor, WorkerHost } from "@nestjs/bullmq";
 import { Job } from "bullmq";
 import { EventEmitter2 } from "@nestjs/event-emitter";
-import { PrismaService } from "@llm-observe/db";
+import { PrismaService, Prisma } from "@llm-observe/db";
 import { redactPII } from "@llm-observe/pii";
 import type { InferenceLogPayload } from "@llm-observe/types";
 
@@ -56,7 +56,7 @@ export class LogProcessor extends WorkerHost {
         outputPreview,
         errorCode: payload.errorCode,
         errorMessage: payload.errorMessage,
-        metadata: payload.metadata as object | undefined,
+        metadata: payload.metadata as Prisma.InputJsonValue | undefined,
         piiRedacted,
       },
     });
