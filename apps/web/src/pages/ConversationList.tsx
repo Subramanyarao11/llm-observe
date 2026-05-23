@@ -1,7 +1,8 @@
 import { useEffect, useMemo, useState } from "react";
 import { Link } from "react-router-dom";
 import { motion } from "framer-motion";
-import { ChevronLeft, ChevronRight, RefreshCw } from "lucide-react";
+import { RefreshCw } from "lucide-react";
+import { ListPagination } from "../components/ListPagination";
 import { PageTransition } from "../components/PageTransition";
 import { Badge } from "../components/ui/badge";
 import { Button } from "../components/ui/button";
@@ -23,12 +24,16 @@ export function ConversationList() {
   const [status, setStatus] = useState<string>("");
   const [provider, setProvider] = useState<Provider | "">("");
   const [page, setPage] = useState(1);
+  const [limit, setLimit] = useState(10);
   const [cancelId, setCancelId] = useState<string | null>(null);
-  const limit = 10;
 
   useEffect(() => {
     setPage(1);
   }, [status, provider]);
+
+  useEffect(() => {
+    setPage(1);
+  }, [limit]);
 
   const filters = useMemo(
     () => ({
@@ -198,35 +203,17 @@ export function ConversationList() {
       )}
 
       {data && data.total > 0 ? (
-        <div className="mt-6 flex flex-col gap-3 border-t border-neutral-200 pt-4 dark:border-neutral-800 sm:flex-row sm:items-center sm:justify-between">
-          <p className="text-sm text-neutral-500 dark:text-neutral-400">
-            {data.totalPages > 1
-              ? `Page ${data.page} of ${data.totalPages} · ${data.total} conversations`
-              : `${data.total} conversation${data.total === 1 ? "" : "s"}`}
-          </p>
-          {data.totalPages > 1 ? (
-            <div className="flex gap-2">
-              <Button
-                variant="outline"
-                size="sm"
-                disabled={!data.hasPrevious || isFetching}
-                onClick={() => setPage((current) => Math.max(1, current - 1))}
-              >
-                <ChevronLeft className="h-4 w-4" />
-                Previous
-              </Button>
-              <Button
-                variant="outline"
-                size="sm"
-                disabled={!data.hasNext || isFetching}
-                onClick={() => setPage((current) => current + 1)}
-              >
-                Next
-                <ChevronRight className="h-4 w-4" />
-              </Button>
-            </div>
-          ) : null}
-        </div>
+        <ListPagination
+          page={data.page}
+          totalPages={data.totalPages}
+          total={data.total}
+          limit={data.limit}
+          hasPrevious={data.hasPrevious}
+          hasNext={data.hasNext}
+          isFetching={isFetching}
+          onPageChange={setPage}
+          onLimitChange={setLimit}
+        />
       ) : null}
 
       <Dialog
