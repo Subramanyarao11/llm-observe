@@ -1,0 +1,15 @@
+FROM node:20-alpine AS builder
+RUN corepack enable && corepack prepare pnpm@9.15.0 --activate
+WORKDIR /app
+COPY package.json pnpm-lock.yaml pnpm-workspace.yaml turbo.json tsconfig.base.json ./
+COPY packages/types ./packages/types
+COPY apps/web ./apps/web
+RUN pnpm install --frozen-lockfile
+ARG VITE_API_URL=http://localhost:3001
+ENV VITE_API_URL=$VITE_API_URL
+RUN pnpm --filter @llm-observe/web build
+
+FROM nginx:alpine
+COPY apps/web/nginx.conf /etc/nginx/conf.d/default.conf
+COPY --from=builder /app/apps/web/dist /usr/share/nginx/html
+EXPOSE 80
