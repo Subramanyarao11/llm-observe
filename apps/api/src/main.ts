@@ -5,6 +5,7 @@ import {
 } from "@nestjs/platform-fastify";
 import { ValidationPipe } from "@nestjs/common";
 import { AppModule } from "./app.module";
+import { StructuredErrorFilter } from "./common/structured-error.filter";
 
 async function bootstrap() {
   const app = await NestFactory.create<NestFastifyApplication>(
@@ -14,6 +15,7 @@ async function bootstrap() {
 
   app.enableCors({ origin: process.env.WEB_URL ?? "*" });
   app.useGlobalPipes(new ValidationPipe({ whitelist: true, transform: true }));
+  app.useGlobalFilters(new StructuredErrorFilter());
   app.setGlobalPrefix("api");
 
   const port = Number(process.env.PORT ?? 3001);
