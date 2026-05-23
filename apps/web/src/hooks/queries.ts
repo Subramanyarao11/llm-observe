@@ -1,10 +1,17 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
 import { api, Provider } from "../lib/api";
+import { formatApiError } from "../lib/errors";
+
+function toastApiError(error: unknown) {
+  toast.error(formatApiError(error));
+}
 
 export function useConversations(filters?: {
   status?: string;
   provider?: Provider;
+  page?: number;
+  limit?: number;
 }) {
   return useQuery({
     queryKey: [
@@ -12,6 +19,8 @@ export function useConversations(filters?: {
       "list",
       filters?.status ?? null,
       filters?.provider ?? null,
+      filters?.page ?? 1,
+      filters?.limit ?? 20,
     ],
     queryFn: () => api.conversations.list(filters),
   });
@@ -41,7 +50,7 @@ export function useCreateConversation() {
       qc.invalidateQueries({ queryKey: ["conversations"] });
       toast.success("Conversation created");
     },
-    onError: (error: Error) => toast.error(error.message),
+    onError: toastApiError,
   });
 }
 
@@ -53,7 +62,7 @@ export function useCancelConversation() {
       qc.invalidateQueries({ queryKey: ["conversations"] });
       toast.success("Conversation cancelled");
     },
-    onError: (error: Error) => toast.error(error.message),
+    onError: toastApiError,
   });
 }
 
@@ -65,7 +74,7 @@ export function useResumeConversation() {
       qc.invalidateQueries({ queryKey: ["conversations"] });
       toast.success("Conversation resumed");
     },
-    onError: (error: Error) => toast.error(error.message),
+    onError: toastApiError,
   });
 }
 

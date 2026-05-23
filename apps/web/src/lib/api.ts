@@ -1,3 +1,5 @@
+import { parseApiError } from "./errors";
+
 const API_BASE = import.meta.env.VITE_API_URL
   ? `${import.meta.env.VITE_API_URL}/api`
   : "/api";
@@ -14,7 +16,7 @@ async function request<T>(path: string, init?: RequestInit): Promise<T> {
   });
   if (!res.ok) {
     const text = await res.text();
-    throw new Error(text || res.statusText);
+    throw parseApiError(res.status, text);
   }
   return res.json() as Promise<T>;
 }
@@ -76,14 +78,31 @@ export interface AnalyticsLog {
   createdAt: string;
 }
 
+export interface PaginatedConversations {
+  items: Conversation[];
+  total: number;
+  page: number;
+  limit: number;
+  totalPages: number;
+  hasNext: boolean;
+  hasPrevious: boolean;
+}
+
 export const api = {
   conversations: {
-    list: (filters?: { status?: string; provider?: Provider }) => {
+    list: (filters?: {
+      status?: string;
+      provider?: Provider;
+      page?: number;
+      limit?: number;
+    }) => {
       const params = new URLSearchParams();
       if (filters?.status) params.set("status", filters.status);
       if (filters?.provider) params.set("provider", filters.provider);
+      if (filters?.page) params.set("page", String(filters.page));
+      if (filters?.limit) params.set("limit", String(filters.limit));
       const query = params.toString();
-      return request<{ items: Conversation[]; total: number }>(
+      return request<PaginatedConversations>(
         `/conversations${query ? `?${query}` : ""}`,
       );
     },

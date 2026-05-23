@@ -28,6 +28,7 @@ import {
   useRecentErrors,
 } from "../hooks/queries";
 import { downloadCsv } from "../lib/csv";
+import { formatApiError } from "../lib/errors";
 import { formatRelativeTime } from "../lib/format";
 import { api } from "../lib/api";
 
@@ -89,7 +90,7 @@ export function Dashboard() {
       );
       toast.success("CSV exported");
     } catch (error) {
-      toast.error(error instanceof Error ? error.message : "Export failed");
+      toast.error(formatApiError(error));
     }
   };
 
