@@ -16,7 +16,7 @@ export class ConversationsService {
       data: {
         provider: dto.provider,
         model: dto.model,
-        title: dto.title ?? `New ${dto.provider} chat`,
+        title: dto.title ?? null,
       },
     });
     this.events.emit("conversation.created", {
@@ -108,9 +108,27 @@ export class ConversationsService {
         content: redacted,
       },
     });
+
+    const updateData: { updatedAt: Date; title?: string } = {
+      updatedAt: new Date(),
+    };
+
+    if (role === "user") {
+      const [conversation, userMessageCount] = await Promise.all([
+        this.prisma.conversation.findUnique({ where: { id: conversationId } }),
+        this.prisma.message.count({
+          where: { conversationId, role: "user" },
+        }),
+      ]);
+
+      if (conversation && !conversation.title && userMessageCount === 1) {
+        updateData.title = redacted.replace(/\s+/g, " ").trim().slice(0, 50);
+      }
+    }
+
     await this.prisma.conversation.update({
       where: { id: conversationId },
-      data: { updatedAt: new Date() },
+      data: updateData,
     });
     return message;
   }
