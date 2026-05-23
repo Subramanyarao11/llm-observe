@@ -16,5 +16,6 @@ spec:
       containers:
         - name: web
           image: llm-observe-web:latest
+          imagePullPolicy: IfNotPresent
           ports:
             - containerPort: 80

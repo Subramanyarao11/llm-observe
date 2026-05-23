@@ -7,6 +7,5 @@ data:
   DATABASE_URL: postgresql://postgres:postgres@postgres:5432/llmobserve
   REDIS_URL: redis://redis:6379
   PORT: "3001"
-  WEB_URL: http://web
-  INGEST_URL: http://api-service:3001/api
-  VITE_API_URL: http://api-service:3001
+  WEB_URL: http://llm-observe.local
+  INGEST_URL: http://api:3001/api

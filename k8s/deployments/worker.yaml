@@ -16,6 +16,7 @@ spec:
       containers:
         - name: worker
           image: llm-observe-worker:latest
+          imagePullPolicy: IfNotPresent
           envFrom:
             - configMapRef:
                 name: llm-observe-config
