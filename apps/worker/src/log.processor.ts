@@ -3,6 +3,7 @@ import { Job } from "bullmq";
 import { EventEmitter2 } from "@nestjs/event-emitter";
 import { PrismaService, Prisma } from "@llm-observe/db";
 import { redactPII } from "@llm-observe/pii";
+import { withSpan } from "@llm-observe/telemetry";
 import type { InferenceLogPayload } from "@llm-observe/types";
 
 @Processor("inference-logs")
@@ -15,7 +16,18 @@ export class LogProcessor extends WorkerHost {
   }
 
   async process(job: Job<InferenceLogPayload>) {
-    const payload = job.data;
+    return withSpan(
+      "worker.process_log",
+      {
+        "ingest.log_id": job.data.logId,
+        "llm.provider": job.data.provider,
+        "job.id": job.id ?? "unknown",
+      },
+      () => this.persistLog(job.data),
+    );
+  }
+
+  private async persistLog(payload: InferenceLogPayload) {
 
     let inputPreview = payload.inputPreview;
     let outputPreview = payload.outputPreview;

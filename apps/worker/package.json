@@ -11,6 +11,7 @@
   "dependencies": {
     "@llm-observe/db": "workspace:*",
     "@llm-observe/pii": "workspace:*",
+    "@llm-observe/telemetry": "workspace:^",
     "@llm-observe/types": "workspace:*",
     "@nestjs/bullmq": "^10.2.3",
     "@nestjs/common": "^10.4.15",

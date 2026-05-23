@@ -17,6 +17,7 @@ RUN pnpm --filter @llm-observe/types build
 RUN pnpm --filter @llm-observe/db generate
 RUN pnpm --filter @llm-observe/db build
 RUN pnpm --filter @llm-observe/pii build
+RUN pnpm --filter @llm-observe/telemetry build
 RUN pnpm --filter @llm-observe/sdk build
 RUN pnpm --filter @llm-observe/api build
 RUN pnpm --filter @llm-observe/worker build
