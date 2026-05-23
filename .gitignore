@@ -11,3 +11,4 @@ coverage/
 packages/db/prisma/migrations/
 packages/db/src/generated/
 *.tsbuildinfo
+spec.md

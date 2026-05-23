@@ -90,7 +90,7 @@ Open:
 - **Health:** http://llm-observe.local/api/health
 - **Bull Board:** http://llm-observe.local/api/admin/queues
 
-## Verify Deployment (Demo Proof)
+## Verify Deployment
 
 ```bash
 kubectl get pods -n llm-observe
@@ -108,12 +108,12 @@ Expected health response:
 }
 ```
 
-Capture screenshots or a short video showing:
+Quick sanity checks:
 
 1. All pods `Running`
 2. Health check JSON with postgres/redis up
 3. Chat message streaming in the UI
-4. Dashboard metrics updating
+4. Dashboard metrics updating after a few LLM calls
 
 ## Secrets
 

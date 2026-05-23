@@ -1,6 +1,17 @@
 # LLM Observe
 
-LLM inference logging and ingestion system built as a Turborepo monorepo with React, NestJS (Fastify), BullMQ, PostgreSQL, and Redis.
+Production-style observability for LLM applications: capture inference metadata, queue ingestion asynchronously, redact PII, and surface analytics in a dashboard.
+
+Built as a Turborepo monorepo with React, NestJS (Fastify), BullMQ, PostgreSQL, and Redis.
+
+## Features
+
+- **Streaming chat UI** — SSE token delivery with OpenAI, Anthropic, and Gemini
+- **SDK interceptor** — fire-and-forget ingest of latency, tokens, previews, and status
+- **Async pipeline** — BullMQ worker with retries, idempotent upserts, and PII redaction
+- **Analytics dashboard** — hourly rollups, provider breakdowns, CSV export
+- **Operational tooling** — deep health checks, Bull Board, failed-job admin API, OpenTelemetry traces
+- **Deploy anywhere** — Docker Compose for local dev, Kubernetes manifests for self-hosted clusters
 
 ## Prerequisites
 
@@ -23,7 +34,7 @@ Services:
 | -------- | ---------------------------- |
 | Web UI   | http://localhost:5173        |
 | API      | http://localhost:3001/api    |
-| Bull Board | http://localhost:3001/admin/queues |
+| Bull Board | http://localhost:3001/api/admin/queues |
 
 ## Local Development
 
@@ -83,7 +94,7 @@ flowchart LR
 
 | Decision | Rationale |
 | -------- | --------- |
-| Postgres over ClickHouse | Simpler ops for assignment scope; sufficient for moderate log volume |
+| Postgres over ClickHouse | Simpler ops for moderate volume; rollups keep dashboard queries fast |
 | EventEmitter2 over Kafka | Internal decoupling without distributed messaging overhead |
 | SSE over WebSockets | Unidirectional streaming fits LLM token delivery |
 | BullMQ over sync writes | Ingestion never blocks chat responses |
@@ -92,8 +103,8 @@ flowchart LR
 
 - KEDA for queue-depth-based worker autoscaling
 - ClickHouse for long-retention metrics at scale
-- OpenTelemetry end-to-end tracing
-- Vault / AWS Secrets Manager for production secrets
+- OTLP export to Jaeger / Grafana Tempo
+- Vault or AWS Secrets Manager for production secrets
 
 ## Kubernetes
 
