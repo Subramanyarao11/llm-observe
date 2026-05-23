@@ -44,9 +44,35 @@ export class LogProcessor extends WorkerHost {
       piiRedacted = piiRedacted || r.didRedact;
     }
 
-    await this.prisma.inferenceLog.create({
-      data: {
+    await this.prisma.inferenceLog.upsert({
+      where: { id: payload.logId },
+      create: {
         id: payload.logId,
+        conversationId: payload.conversationId,
+        sessionId: payload.sessionId,
+        provider: payload.provider,
+        model: payload.model,
+        status: payload.status,
+        requestStartedAt: new Date(payload.requestStartedAt),
+        firstTokenAt: payload.firstTokenAt
+          ? new Date(payload.firstTokenAt)
+          : null,
+        requestEndedAt: payload.requestEndedAt
+          ? new Date(payload.requestEndedAt)
+          : null,
+        latencyMs: payload.latencyMs,
+        ttftMs: payload.ttftMs,
+        promptTokens: payload.promptTokens,
+        completionTokens: payload.completionTokens,
+        totalTokens: payload.totalTokens,
+        inputPreview,
+        outputPreview,
+        errorCode: payload.errorCode,
+        errorMessage: payload.errorMessage,
+        metadata: payload.metadata as Prisma.InputJsonValue | undefined,
+        piiRedacted,
+      },
+      update: {
         conversationId: payload.conversationId,
         sessionId: payload.sessionId,
         provider: payload.provider,
