@@ -1,0 +1,25 @@
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: db-migrate
+  namespace: llm-observe
+spec:
+  ttlSecondsAfterFinished: 600
+  backoffLimit: 4
+  template:
+    metadata:
+      labels:
+        app: db-migrate
+    spec:
+      restartPolicy: OnFailure
+      containers:
+        - name: migrate
+          image: llm-observe-migrate:latest
+          imagePullPolicy: IfNotPresent
+          envFrom:
+            - configMapRef:
+                name: llm-observe-config
+          command:
+            - sh
+            - -c
+            - pnpm --filter @llm-observe/db generate && pnpm --filter @llm-observe/db push

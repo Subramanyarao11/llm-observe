@@ -10,6 +10,9 @@ COPY apps/api/package.json ./apps/api/
 COPY apps/worker/package.json ./apps/worker/
 RUN pnpm install --frozen-lockfile
 
+FROM deps AS migrate
+CMD ["sh", "-c", "pnpm --filter @llm-observe/db generate && pnpm --filter @llm-observe/db push"]
+
 FROM deps AS builder
 COPY apps/api ./apps/api
 COPY apps/worker ./apps/worker
