@@ -104,7 +104,8 @@ Quick start:
 ```bash
 vim k8s/secret.yaml   # add LLM API keys
 ./scripts/k8s-minikube-deploy.sh
-echo "$(minikube ip) llm-observe.local" | sudo tee -a /etc/hosts
+minikube tunnel   # separate terminal, required on Docker driver
+echo "127.0.0.1 llm-observe.local" | sudo tee -a /etc/hosts
 open http://llm-observe.local/
 ```
 
