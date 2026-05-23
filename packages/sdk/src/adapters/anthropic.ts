@@ -1,6 +1,6 @@
 import Anthropic from "@anthropic-ai/sdk";
 import type { LLMRequestOptions } from "@llm-observe/types";
-import type { LLMAdapter } from "../types.js";
+import type { LLMAdapter, TokenUsage } from "../types.js";
 
 export class AnthropicAdapter implements LLMAdapter {
   private client: Anthropic;
@@ -31,7 +31,9 @@ export class AnthropicAdapter implements LLMAdapter {
     };
   }
 
-  async *stream(options: LLMRequestOptions): AsyncGenerator<string> {
+  async *stream(
+    options: LLMRequestOptions,
+  ): AsyncGenerator<string, TokenUsage | undefined> {
     const messages = options.messages.filter(
       (m): m is Extract<typeof m, { role: "user" | "assistant" }> =>
         m.role !== "system",
@@ -50,5 +52,12 @@ export class AnthropicAdapter implements LLMAdapter {
         yield event.delta.text;
       }
     }
+    const finalMessage = await stream.finalMessage();
+    return {
+      promptTokens: finalMessage.usage.input_tokens,
+      completionTokens: finalMessage.usage.output_tokens,
+      totalTokens:
+        finalMessage.usage.input_tokens + finalMessage.usage.output_tokens,
+    };
   }
 }

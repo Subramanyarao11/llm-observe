@@ -34,6 +34,8 @@ export class AnalyticsService {
         createdAt: true,
         provider: true,
         totalTokens: true,
+        promptTokens: true,
+        completionTokens: true,
       },
     });
 
@@ -52,7 +54,9 @@ export class AnalyticsService {
         tokens: 0,
       };
       existing.count += 1;
-      existing.tokens += log.totalTokens ?? 0;
+      existing.tokens +=
+        log.totalTokens ??
+        (log.promptTokens ?? 0) + (log.completionTokens ?? 0);
       buckets.set(key, existing);
     }
 
@@ -112,15 +116,75 @@ export class AnalyticsService {
       this.prisma.inferenceLog.aggregate({
         where: { createdAt: { gte: since } },
         _avg: { latencyMs: true },
-        _sum: { totalTokens: true },
+        _sum: {
+          totalTokens: true,
+          promptTokens: true,
+          completionTokens: true,
+        },
       }),
     ]);
+
+    const summedTotal =
+      aggregates._sum.totalTokens ??
+      (aggregates._sum.promptTokens ?? 0) +
+        (aggregates._sum.completionTokens ?? 0);
 
     return {
       totalRequests: total,
       avgLatencyMs: aggregates._avg.latencyMs ?? 0,
       successRate: total > 0 ? success / total : 0,
-      totalTokens: aggregates._sum.totalTokens ?? 0,
+      totalTokens: summedTotal,
     };
+  }
+
+  async recentErrors(window: Window = "24h") {
+    const since = windowToDate(window);
+    return this.prisma.inferenceLog.findMany({
+      where: { createdAt: { gte: since }, status: "error" },
+      orderBy: { createdAt: "desc" },
+      take: 20,
+      select: {
+        id: true,
+        errorCode: true,
+        errorMessage: true,
+        conversationId: true,
+        provider: true,
+        model: true,
+        createdAt: true,
+      },
+    });
+  }
+
+  async logs(
+    window: Window = "24h",
+    provider?: string,
+    hour?: string,
+  ) {
+    const since = windowToDate(window);
+    const logs = await this.prisma.inferenceLog.findMany({
+      where: {
+        createdAt: { gte: since },
+        ...(provider ? { provider } : {}),
+      },
+      orderBy: { createdAt: "desc" },
+      select: {
+        id: true,
+        conversationId: true,
+        sessionId: true,
+        provider: true,
+        model: true,
+        status: true,
+        latencyMs: true,
+        ttftMs: true,
+        totalTokens: true,
+        promptTokens: true,
+        completionTokens: true,
+        errorCode: true,
+        createdAt: true,
+      },
+    });
+
+    if (!hour) return logs;
+    return logs.filter((log) => log.createdAt.toISOString().startsWith(hour));
   }
 }

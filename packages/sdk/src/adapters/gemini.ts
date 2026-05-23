@@ -1,6 +1,6 @@
 import { GoogleGenerativeAI } from "@google/generative-ai";
 import type { LLMRequestOptions } from "@llm-observe/types";
-import type { LLMAdapter } from "../types.js";
+import type { LLMAdapter, TokenUsage } from "../types.js";
 
 export class GeminiAdapter implements LLMAdapter {
   private client: GoogleGenerativeAI;
@@ -30,7 +30,9 @@ export class GeminiAdapter implements LLMAdapter {
     };
   }
 
-  async *stream(options: LLMRequestOptions): AsyncGenerator<string> {
+  async *stream(
+    options: LLMRequestOptions,
+  ): AsyncGenerator<string, TokenUsage | undefined> {
     const model = this.client.getGenerativeModel({ model: options.model });
     const lastMessage = options.messages.at(-1);
     const result = await model.generateContentStream(lastMessage?.content ?? "");
@@ -38,5 +40,12 @@ export class GeminiAdapter implements LLMAdapter {
       const text = chunk.text();
       if (text) yield text;
     }
+    const response = await result.response;
+    const usage = response.usageMetadata;
+    return {
+      promptTokens: usage?.promptTokenCount,
+      completionTokens: usage?.candidatesTokenCount,
+      totalTokens: usage?.totalTokenCount,
+    };
   }
 }

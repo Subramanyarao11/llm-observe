@@ -75,12 +75,19 @@ export class LLMClient {
     let status: InferenceMetadata["status"] = "success";
     let errorCode: string | undefined;
     let errorMessage: string | undefined;
+    let usage: TokenUsage | undefined;
 
     try {
-      for await (const chunk of this.adapters[options.provider].stream(options)) {
+      const stream = this.adapters[options.provider].stream(options);
+      while (true) {
+        const { done, value } = await stream.next();
+        if (done) {
+          usage = value;
+          break;
+        }
         if (!firstTokenAt) firstTokenAt = new Date().toISOString();
-        fullOutput += chunk;
-        yield chunk;
+        fullOutput += value;
+        yield value;
       }
     } catch (err: unknown) {
       status = "error";
@@ -111,6 +118,9 @@ export class LLMClient {
         outputPreview: fullOutput.slice(0, 500),
         errorCode,
         errorMessage,
+        promptTokens: usage?.promptTokens,
+        completionTokens: usage?.completionTokens,
+        totalTokens: usage?.totalTokens,
       });
     }
   }

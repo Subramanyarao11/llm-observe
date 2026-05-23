@@ -8,7 +8,7 @@ export interface TokenUsage {
 
 export interface LLMAdapter {
   chat(options: LLMRequestOptions): Promise<{ content: string; usage?: TokenUsage }>;
-  stream(options: LLMRequestOptions): AsyncGenerator<string>;
+  stream(options: LLMRequestOptions): AsyncGenerator<string, TokenUsage | undefined>;
 }
 
 export interface SDKConfig {
